@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบ KPI ประจำปี 2569</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun',Arial,sans-serif;background:#f0f4f8;color:#1a2a3a;font-size:15px;}
+.header{background:#1a5276;color:white;padding:18px 24px;cursor:default;user-select:none;}
+.header h1{font-size:21px;font-weight:700;margin-bottom:2px;}
+.header p{font-size:13px;opacity:.8;}
+
+/* LOGIN */
+.login-wrap{min-height:calc(100vh - 76px);display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-card{background:white;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.10);padding:36px 32px;width:100%;max-width:420px;}
+.login-card h2{font-size:18px;color:#1a5276;margin-bottom:4px;font-weight:700;}
+.login-sub{font-size:13px;color:#7f8c8d;margin-bottom:22px;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:13px;font-weight:600;color:#34495e;margin-bottom:5px;}
+.fg select,.fg input{width:100%;border:1px solid #b0bec5;border-radius:7px;padding:10px 12px;font-size:14px;background:white;color:#1a2a3a;}
+.fg select:focus,.fg input:focus{outline:none;border-color:#1a5276;box-shadow:0 0 0 2px rgba(26,82,118,.15);}
+.pin-f{text-align:center;letter-spacing:6px;font-size:22px;font-weight:700;}
+.btn-login{width:100%;padding:12px;border-radius:7px;background:#1a5276;color:white;border:none;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn-login:hover{background:#154360;}
+.lerr{color:#c0392b;font-size:13px;margin-top:10px;text-align:center;padding:8px;background:#fdf0ed;border-radius:6px;display:none;}
+.lerr.show{display:block;}
+
+/* TOPBAR */
+.topbar{background:white;border-bottom:1px solid #d0d9e3;padding:11px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;}
+.tl{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.dbadge{background:#1a5276;color:white;border-radius:6px;padding:5px 13px;font-size:13px;font-weight:700;}
+.dbadge.admin{background:#6c3483;}
+.topbar label{font-size:13px;font-weight:500;color:#34495e;}
+.topbar select{border:1px solid #b0bec5;border-radius:6px;padding:6px 9px;font-size:13px;background:white;}
+.topbar select:focus{outline:none;border-color:#1a5276;}
+.btn-lo{padding:6px 14px;border-radius:6px;background:#f0f4f8;border:1px solid #b0bec5;font-size:13px;cursor:pointer;color:#5d6d7e;}
+.btn-lo:hover{background:#fadbd8;border-color:#e74c3c;color:#c0392b;}
+
+/* SCRIPT URL BANNER */
+.sbanner{background:#fff8e1;border-bottom:2px solid #f9a825;padding:9px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;}
+.sbanner.ok{background:#e8f5e9;border-color:#43a047;}
+.surl-in{flex:1;min-width:260px;border:1px solid #b0bec5;border-radius:5px;padding:5px 9px;font-size:12px;font-family:monospace;}
+.btn-su{padding:5px 12px;background:#f9a825;color:white;border:none;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;}
+.ustat{font-size:12px;font-weight:600;}
+.ustat.ok{color:#2e7d32;} .ustat.warn{color:#e65100;}
+
+/* MAIN */
+.main{max-width:1020px;margin:22px auto;padding:0 16px;}
+
+/* DEPT FORM */
+.dcard{background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;margin-bottom:18px;}
+.dtitle{background:#1a5276;color:white;padding:13px 20px;font-size:16px;font-weight:700;}
+.dsub{padding:9px 20px;background:#d4e6f1;color:#1a5276;font-size:13px;font-weight:600;}
+.kpi-tbl{width:100%;border-collapse:collapse;}
+.kpi-tbl th{background:#2e86c1;color:white;padding:9px 11px;text-align:left;font-size:13px;font-weight:600;white-space:nowrap;}
+.kpi-tbl th.c{text-align:center;}
+.kpi-tbl td{padding:8px 11px;border-bottom:1px solid #eaf0f6;vertical-align:middle;font-size:13px;}
+.kpi-tbl td.c{text-align:center;}
+.kpi-tbl tr:last-child td{border-bottom:none;}
+.kpi-tbl tr:hover td{background:#f8fbfd;}
+.ni{width:88px;border:1px solid #b0bec5;border-radius:5px;padding:5px 7px;font-size:13px;text-align:center;}
+.ni:focus{outline:none;border-color:#2e86c1;box-shadow:0 0 0 2px rgba(46,134,193,.15);}
+.pi{width:88px;border:1.5px solid #aed6f1;border-radius:5px;padding:5px 7px;font-size:13px;text-align:center;background:#eaf4fb;color:#1a5276;font-weight:600;}
+.pi:focus{outline:none;border-color:#2e86c1;background:white;}
+.ri{width:100%;border:1px solid #b0bec5;border-radius:5px;padding:5px 7px;font-size:13px;}
+.ri:focus{outline:none;border-color:#2e86c1;}
+
+.abar{background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:14px 18px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:28px;}
+.btn{padding:9px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-p{background:#1a5276;color:white;} .btn-p:hover:not(:disabled){background:#154360;}
+.btn-g{background:#1e8449;color:white;} .btn-g:hover:not(:disabled){background:#196f3d;}
+.btn-e{background:#1565c0;color:white;} .btn-e:hover:not(:disabled){background:#0d47a1;}
+.btn-d{background:#f0f4f8;color:#c0392b;border:1px solid #e9b4b0;} .btn-d:hover{background:#fadbd8;}
+.sst{font-size:13px;font-weight:600;padding:7px 12px;border-radius:6px;display:none;}
+.sst.show{display:block;}
+.sst.success{color:#1e8449;background:#e8f5e9;border:1px solid #a5d6a7;}
+.sst.error{color:#c0392b;background:#fdf0ed;border:1px solid #f5b7b1;}
+.sst.loading{color:#1565c0;background:#e3f2fd;border:1px solid #90caf9;}
+
+/* ===== ADMIN DASHBOARD ===== */
+.adash{padding:4px 0 28px;}
+
+/* Filter bar */
+.fbar{background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:14px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px;}
+.fbar label{font-size:13px;font-weight:600;color:#34495e;}
+.fbar select{border:1px solid #b0bec5;border-radius:6px;padding:7px 10px;font-size:13px;background:white;min-width:140px;}
+.fbar select:focus{outline:none;border-color:#6c3483;}
+.btn-exp-all{padding:8px 16px;border-radius:7px;background:#6c3483;color:white;border:none;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto;}
+.btn-exp-all:hover{background:#5b2c6f;}
+
+/* Stat cards */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
+.stat-card{background:white;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.stat-card .sv{font-size:26px;font-weight:700;color:#1a5276;margin-bottom:2px;}
+.stat-card .sl{font-size:12px;color:#7f8c8d;font-weight:500;}
+
+/* Summary table */
+.sum-wrap{background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;margin-bottom:18px;}
+.sum-wrap h3{padding:13px 18px;background:#6c3483;color:white;font-size:15px;font-weight:700;}
+.tscroll{overflow-x:auto;}
+.sum-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.sum-tbl th{background:#eaf0f6;padding:9px 12px;text-align:left;font-weight:700;color:#34495e;white-space:nowrap;border-bottom:2px solid #d0d9e3;}
+.sum-tbl th.c{text-align:center;}
+.sum-tbl td{padding:8px 12px;border-bottom:1px solid #eaf0f6;vertical-align:middle;}
+.sum-tbl td.c{text-align:center;}
+.sum-tbl tr:last-child td{border-bottom:none;}
+.sum-tbl tr:hover td{background:#faf5ff;}
+.sum-tbl .dept-tag{display:inline-block;background:#d4e6f1;color:#1a5276;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;}
+.sum-tbl .pct-val{font-weight:700;color:#1e8449;}
+.sum-tbl .no-data{color:#b0bec5;font-style:italic;}
+
+/* Status badge */
+.sub-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.sub-y{background:#d5f5e3;color:#1e8449;}
+.sub-n{background:#fdf0ed;color:#c0392b;}
+
+/* Dept progress grid */
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:18px;}
+.prog-card{background:white;border-radius:9px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #b0bec5;}
+.prog-card.has-data{border-left-color:#1e8449;}
+.prog-card.partial{border-left-color:#f39c12;}
+.prog-code{font-size:11px;font-weight:700;color:#7f8c8d;letter-spacing:.5px;}
+.prog-name{font-size:13px;font-weight:600;color:#1a2a3a;margin:2px 0;}
+.prog-stat{font-size:12px;color:#7f8c8d;}
+.prog-stat.ok{color:#1e8449;}
+.prog-stat.miss{color:#c0392b;}
+
+/* ADMIN PIN PANEL */
+.ao{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.ao.show{display:flex;}
+.ab{background:white;border-radius:12px;padding:26px 22px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;}
+.ab h3{font-size:16px;color:#1a5276;margin-bottom:3px;font-weight:700;}
+.an{font-size:12px;color:#7f8c8d;margin-bottom:16px;}
+.pt{width:100%;border-collapse:collapse;font-size:13px;}
+.pt th{background:#eaf0f6;padding:7px 9px;text-align:left;font-weight:700;color:#34495e;}
+.pt td{padding:5px 9px;border-bottom:1px solid #eaf0f6;}
+.pe{width:76px;border:1px solid #b0bec5;border-radius:4px;padding:4px 6px;font-size:13px;text-align:center;letter-spacing:3px;font-weight:700;}
+.btn-as{margin-top:14px;padding:8px 18px;background:#1a5276;color:white;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-ac{margin-top:14px;margin-left:8px;padding:8px 18px;background:#f0f4f8;color:#2c3e50;border:1px solid #b0bec5;border-radius:7px;font-size:13px;cursor:pointer;}
+.afb{position:fixed;bottom:20px;right:20px;background:#5d4e8a;color:white;border:none;border-radius:50%;width:44px;height:44px;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:999;display:none;}
+
+@media(max-width:640px){
+  .main{padding:0 8px;}
+  .ni,.pi{width:68px;font-size:12px;}
+  .kpi-tbl th,.kpi-tbl td{padding:6px 6px;font-size:12px;}
+  .abar{gap:7px;}
+  .btn{padding:8px 11px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<div class="header" id="headerArea">
+  <h1>📋 ระบบรายงาน KPI ประจำปี 2569</h1>
+  <p>กรอกข้อมูลตัวชี้วัดรายเดือน — ส่งข้อมูลอัตโนมัติไป Google Sheet</p>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-card">
+      <h2>🏥 เข้าสู่ระบบ</h2>
+      <div class="login-sub">กรุณาเลือกแผนกและกรอก PIN เพื่อเข้าใช้งาน</div>
+      <div class="fg">
+        <label>แผนก / บทบาท</label>
+        <select id="loginDept"></select>
+      </div>
+      <div class="fg">
+        <label>รหัส PIN (4 หลัก)</label>
+        <input class="pin-f" type="password" id="loginPin" maxlength="4" inputmode="numeric" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn-login" onclick="doLogin()">เข้าสู่ระบบ</button>
+      <div class="lerr" id="loginErr">PIN ไม่ถูกต้อง กรุณาลองใหม่</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen" style="display:none">
+  <div class="sbanner" id="sBanner">
+    <strong id="sBannerTitle">⚠️ ยังไม่ได้ตั้งค่า Google Sheet URL:</strong>
+    <input class="surl-in" type="text" id="sUrlIn" placeholder="วาง Google Apps Script Web App URL ที่นี่...">
+    <button class="btn-su" onclick="saveUrl()">บันทึก URL</button>
+    <span class="ustat warn" id="uStat">ยังไม่ได้ตั้งค่า</span>
+  </div>
+  <div class="topbar">
+    <div class="tl">
+      <span class="dbadge" id="activeBadge"></span>
+      <span id="topMonthYear" style="display:none">
+        <label>เดือน:</label>
+        <select id="monthSel" onchange="renderForm()">
+          <option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option>
+          <option value="3">มีนาคม</option><option value="4">เมษายน</option>
+          <option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option>
+          <option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option>
+          <option value="9">กันยายน</option><option value="10">ตุลาคม</option>
+          <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+        </select>
+        <label>ปี:</label>
+        <select id="yearSel" onchange="renderForm()">
+          <option value="2569">2569</option><option value="2570">2570</option>
+        </select>
+      </span>
+    </div>
+    <button class="btn-lo" onclick="doLogout()">🔒 ออกจากระบบ</button>
+  </div>
+  <div class="main" id="mainContent"></div>
+</div>
+
+<!-- ADMIN PIN PANEL -->
+<div class="ao" id="ao">
+  <div class="ab">
+    <h3>⚙️ จัดการ PIN แต่ละแผนก</h3>
+    <div class="an">PIN ผู้ดูแลระบบ: <strong>9999</strong></div>
+    <table class="pt"><thead><tr><th>รหัส</th><th>ชื่อแผนก</th><th>PIN</th></tr></thead>
+    <tbody id="pinBody"></tbody></table>
+    <button class="btn-as" onclick="savePins()">💾 บันทึก PIN</button>
+    <button class="btn-ac" onclick="document.getElementById('ao').classList.remove('show')">ปิด</button>
+  </div>
+</div>
+<button class="afb" id="afb" onclick="openAdmin()">⚙️</button>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DEPTS={
+  OPD:{name:"ผู้ป่วยนอก",kpis:["การรายงานค่าวิกฤต ทางห้องปฏิบัติการ เป้าหมาย 100%","การรายงานค่าวิกฤต ทางรังสี เป้าหมาย 100%","อุบัติการณ์การเกิดภาวะแทรกซ้อนเนื่องจากการรายงานค่าวิกฤตทางห้องปฏิบัติการล่าช้า เป้าหมาย 0%","อัตราการโทรเยี่ยมติดตาม Case ผู้ป่วยหลังผ่าตัดและส่องกล้อง ภายใน 90 วัน เป้าหมาย 100%"]},
+  ER:{name:"ห้องฉุกเฉิน",kpis:["อัตราการโทรติดตามผู้ป่วยหลังการผ่าตัดใหญ่ 100%","การรายงานค่าวิกฤตทางห้องปฏิบัติการและรังสี 100%","อัตราผู้รับบริการได้รับข้อมูลและมีการบันทึกข้อมูลกรณีที่ผู้ป่วยปฏิเสธการรักษา 100%","อัตราการ Refer คนไข้ภายในเครือเพิ่มขึ้น ≥ 25%"]},
+  OR:{name:"ห้องผ่าตัด",kpis:["อัตราความถูกต้อง ครบถ้วน สมบูรณ์ ของการ Set ผ่าตัด > 80%","อัตราความถูกต้องของการลงบันทึกตารางการผ่าตัด ถูกต้อง สมบูรณ์ > 80%","ร้อยละของการทำ Surgical Mark Site เพื่อป้องกันการผ่าตัดผิดข้าง ผิดตำแหน่ง = 100%","จำนวนครั้งของการยกเลิก/เลื่อน/งด การผ่าตัด เนื่องจากความไม่พร้อม = 0","อุบัติการณ์การเกิดอุบัติเหตุจากการเคลื่อนย้ายผู้ป่วยในห้องผ่าตัด = 0","ร้อยละของการบันทึกแบบฟอร์ม Surgical Safety Checklist ครบถ้วน 100%","ผู้ป่วย Major ได้รับการทำ Time Out ทุกราย 100%","อัตราการเกิดอุบัติการณ์ มีสิ่งตกค้างในตัวผู้ป่วย = 0","ร้อยละของการบันทึกแบบฟอร์มการพยาบาลห้องผ่าตัด ถูกต้อง 100%","จำนวนครั้งที่ปฏิเสธการรับสิ่งส่งตรวจ/สิ่งส่งตรวจไม่ถูกต้อง = 0","อุบัติการณ์ความเสี่ยงระดับ E ขึ้นไป = 0","อัตราการลงบันทึกอุณหภูมิและความชื้นของแผนก เป้าหมาย 100%"]},
+  IPD:{name:"ผู้ป่วยใน",kpis:["อัตราการติดเชื้อในทางเดินปัสสาวะจากการคาสายสวนปัสสาวะ 0 ต่อ 1,000 วันนอน","อัตราการเกิดหลอดเลือดดำอักเสบระดับ 3-5 จากการให้สารน้ำทางหลอดเลือดดำ 0 ต่อ 1,000 วันนอน","ร้อยละของความพึงพอใจของผู้ป่วยในต่อการให้บริการ ≥ 80","ความคลาดเคลื่อนทางยาผู้ป่วยในระดับ E ขึ้นไปน้อยกว่าร้อยละ 10"]},
+  PHM:{name:"เภสัชกรรม",kpis:["อัตราการแพ้ยาซ้ำในโรงพยาบาล เป็น 0%","Medication Error (Transcribing error) ลดลง 20%","อัตราความผิดพลาดด้านการบริหารยาน้อยกว่า 0.5%","อัตราการจัดเก็บยาและเวชภัณฑ์ตามเกณฑ์มาตรฐาน เป้าหมาย 100%","ข้อมูลความสมบูรณ์ของคำสั่งแพทย์ถูกต้อง ครบถ้วน เป้าหมาย >80%"]},
+  LAB:{name:"ห้องปฏิบัติการ",kpis:["การรายงานค่าวิกฤตทางห้องปฏิบัติการภายในเวลาที่กำหนด เป้าหมาย 100%","อัตราความคลาดเคลื่อนในการรายงานผลห้องปฏิบัติการ เป้าหมาย 0%","อัตราการปฏิเสธตัวอย่างสิ่งส่งตรวจ เป้าหมาย <5%","อุบัติการณ์การเกิดอุบัติเหตุภายในห้องปฏิบัติการ เป้าหมาย 0%"]},
+  RD:{name:"รังสี",kpis:["การรายงานค่าวิกฤต MRI ของเจ้าหน้าที่แผนกรังสีวิทยาล่าช้า เป้าหมาย 0%","อัตราการถ่ายภาพเอกซเรย์ซ้ำ ไม่เกิน 5%","อุบัติการณ์การเอกซเรย์ผิดคน ผิดตำแหน่ง เป้าหมาย 0%","จำนวนผู้เข้ารับบริการแพ้สารทึบรังสี 0%","อุบัติการณ์การเกิดอุบัติเหตุภายในหน่วยงาน เป้าหมาย 0%","อุบัติการณ์การเกิดภาวะแทรกซ้อนเนื่องจากการรายงานค่าวิกฤตทางรังสีล่าช้า เป้าหมาย 0%","มีเอกสารกำหนดสิทธิ์ (Clinical Privilege) ของแพทย์ที่ผ่านการอนุมัติ เป้าหมาย 100%"]},
+  HR:{name:"บุคคล",kpis:["การอบรมระบบคุณภาพและความปลอดภัย < 3%","การประเมินสมรรถนะได้ถูกดำเนินการครบถ้วน 100%","อัตราการบาดเจ็บของพนักงาน น้อยกว่า 3%","การเข้ารับการฝึกอบรมของพนักงานต้องไม่น้อยกว่า 90%"]},
+  KC:{name:"ห้องครัว",kpis:["พนักงานในแผนกผ่านการอบรมสุขาภิบาลอาหาร 100%","การติดฉลากบ่งชี้วันหมดอายุของวัตถุดิบและเครื่องปรุง 100%","การตรวจเช็คอุณหภูมิวัตถุที่แช่แข็งและที่อยู่ในตู้เย็น 100%"]},
+  MTN:{name:"ช่างซ่อมบำรุง",kpis:["การตรวจสอบอุปกรณ์ Emergency Light ตามแผน ≥ 80%","การตรวจสอบอุปกรณ์ Smoke Detector ตามแผน ≥ 80%","การตรวจสอบอุปกรณ์ถังดับเพลิงตามแผน ≥ 80%","การบำรุงรักษาเครื่องมือแพทย์ตามแผน 100%"]},
+  VL:{name:"ยานยนต์และเวรเปล",kpis:["อัตราการซ่อมบำรุงรถธุรการเป็นไปตามแผน 100%","จำนวนอุบัติเหตุที่เกิดขึ้นระหว่างปฏิบัติงาน = 0","ความพร้อมใช้งานของรถพยาบาล มากกว่า 80%"]},
+  IIS:{name:"ประกันต่างประเทศ",kpis:["ไม่มีเอกสารตีกลับหลังการเคลมจัดส่งเรียกเก็บเงิน เป้าหมาย 0%","ไม่มีปัญหาลูกค้าร้องเรียนการทำงานผิดพลาด เป้าหมาย 0%","อัตราบริษัทประกันปฏิเสธการจ่ายของผู้ป่วย เป้าหมาย <10%"]},
+  TIS:{name:"ประกันไทย",kpis:["จัดส่งข้อมูลผู้ป่วยนอกที่ได้รับมาแต่ละเดือนได้อย่างถูกต้อง เป้าหมาย 100%","ไม่มีการส่งข้อมูลกลับคืนอันเกิดจากการผิดพลาดหลังการส่งเคลม เป้าหมาย 0%","อัตราบริษัทประกันปฏิเสธการจ่ายของผู้ป่วย เป้าหมาย <10%","อัตราข้อร้องเรียนจากการให้บริการแผนกประกัน <1%"]},
+  MRD:{name:"เวชระเบียน",kpis:["ความสมบูรณ์เวชระเบียน ≥ 95%","แนวโน้มข้อบกพร่องของการบันทึกเวชระเบียนลดลง","ความสมบูรณ์ของ Consent Form ในเวชระเบียน 100%","มีการประเมิน Fall Assessment และ Pain Score เป้าหมาย 100%"]},
+  IT:{name:"เทคโนโลยีสารสนเทศ",kpis:["ระบบ CCTV ของโรงพยาบาลใช้งานได้ เป้าหมาย 100%","ระบบอินเตอร์เน็ตของโรงพยาบาลใช้งานได้ เป้าหมาย 100%","คอมพิวเตอร์ในโรงพยาบาลสามารถใช้งานได้ 90%"]},
+  ACC:{name:"บัญชี",kpis:["อัตราความถูกต้องของการบันทึกบัญชีประจำเดือน 100%","การจัดทำงบการเงินประจำเดือนเสร็จตามกำหนด 100%","อัตราความคลาดเคลื่อนของข้อมูลทางบัญชี <1%","การตรวจสอบยอดบัญชีและการกระทบยอดประจำเดือน 100%"]},
+  FNC:{name:"การเงิน",kpis:["อัตราการจัดทำรายงานแคชเชียร์ประจำวัน 100%","อัตราการจ่ายเงินสดย่อยประจำวัน 100%","อัตราการวางบิลในแผนก 100%","อัตราการตามหนี้ 100%","อัตราการตัดหนี้ 100%","อัตราการนำยอดขายรายได้ฝากบัญชีถูกต้อง 100%"]},
+  AR:{name:"บัญชีลูกหนี้",kpis:["อัตราการเรียกเก็บหนี้ตามกำหนดเวลา 100%","อัตราหนี้สงสัยจะสูญ <5%","อัตราการออกใบแจ้งหนี้ถูกต้อง ครบถ้วน 100%","อัตราการติดตามหนี้ค้างชำระ เป้าหมาย 100%"]},
+  HK:{name:"แม่บ้าน",kpis:["ความพึงพอใจในการทำความสะอาด OPD เป้าหมาย 100%","ความพึงพอใจในการทำความสะอาด IPD เป้าหมาย 100%","ความพึงพอใจในการทำความสะอาด ER เป้าหมาย 100%","การสวมชุด PPE ป้องกันในการเก็บขยะติดเชื้อ 100%","การเกิดอุบัติเหตุจากการสัมผัสสารเคมีในขณะทำงาน 0%"]},
+  QD:{name:"พัฒนาคุณภาพ",kpis:["ขึ้นทะเบียนความเสี่ยงและทะเบียนเอกสารคุณภาพภายในเวลาที่กำหนด 100%","การติดตามตัวชี้วัดแผนก 80%","การจัดประชุมคณะกรรมการของโรงพยาบาลเป็นไปตามแผน 100%"]},
+  PT:{name:"กายภาพ",kpis:["อัตราความพึงพอใจของผู้ป่วยต่อการให้บริการกายภาพบำบัด ≥ 80%","อัตราการบันทึกแบบประเมินและแผนการรักษาครบถ้วน 100%","อุบัติการณ์การเกิดอุบัติเหตุระหว่างทำกายภาพบำบัด = 0","อัตราการโทรติดตามผู้ป่วยหลังการรักษา เป้าหมาย ≥ 90%"]},
+  SUP:{name:"หน่วยจ่ายกลาง",kpis:["อุณหภูมิและความชื้นในแผนกที่จัดเก็บเวชภัณฑ์ปลอดเชื้อเป็นไปตามมาตรฐาน เป้าหมาย 100%","อัตราการลงบันทึกอุณหภูมิและความชื้นเป็นไปตามเกณฑ์ เป้าหมาย 100%","อัตราการลงพื้นที่ตรวจสอบการจัดเก็บเวชภัณฑ์ปลอดเชื้อตามแผน เป้าหมาย >80%","พนักงานแผนก Supply ได้รับการอบรมเรื่องการทำความสะอาด Anesthesia Mask เป้าหมาย 100%","อัตราการบ่งชี้เรื่องความสะอาดของ Anesthesia Mask เป็นไปตามมาตรฐาน เป้าหมาย 100%"]},
+  PC:{name:"จัดซื้อ",kpis:["อัตราข้อร้องเรียนในการจัดซื้อสินค้าผิดพลาดหรือล่าช้า เป้าหมาย 0%","อัตราการจัดซื้อสินค้าครบถ้วนตามใบ PR ที่ได้รับในแต่ละเดือน เป้าหมาย 100%","อัตราความถูกต้องในการจัดซื้อสินค้า เป้าหมาย 100%"]},
+  MKT:{name:"การตลาด",kpis:["ความพึงพอใจผู้ป่วย ≥ 90%","อัตราข้อร้องเรียน < 3% (เมื่อเทียบกับ Incident Report ทั้งหมด)","คะแนนความพึงพอใจผู้ป่วย/ผู้รับบริการ Google Review ≥ 90%","ผลการประเมินความพึงพอใจของผู้ใช้บริการผู้ป่วยใน ≥ 85%","ผลการประเมินความพึงพอใจของผู้ใช้บริการผู้ป่วยนอก ≥ 85%","อัตราการรับข้อร้องเรียนของโรงแรม บริษัททัวร์ มูลนิธิ น้อยกว่า 5%"]},
+  SK:{name:"ผิวหนัง",kpis:["การบันทึกใบ Consent Form ถูกต้องครบ 100%","สต๊อกสินค้าถูกต้อง 100%","การเกิดอุบัติการณ์หรือภาวะแทรกซ้อนจากการทำหัตถการ = 0"]},
+  LDY:{name:"ซักรีด",kpis:["อัตราการส่งผ้าคืนตรงเวลาตามแผน เป้าหมาย ≥ 95%","อัตราความเสียหายของผ้าและเครื่องนอน เป้าหมาย <1%","การสวมใส่ PPE ในการทำงาน 100%","อัตราความพึงพอใจของแผนกผู้ใช้บริการ ≥ 80%"]}
+};
+
+const MONTHS=["","มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const DEFAULT_PINS={OPD:"1001",ER:"1002",OR:"1003",IPD:"1004",PHM:"1005",LAB:"1006",RD:"1007",HR:"1008",KC:"1009",MTN:"1010",VL:"1011",IIS:"1012",TIS:"1013",MRD:"1014",IT:"1015",ACC:"1016",FNC:"1017",AR:"1018",HK:"1019",QD:"1020",PT:"1021",SUP:"1022",PC:"1023",MKT:"1024",SK:"1025",LDY:"1026"};
+const ADMIN_PIN="9999";
+
+function getPins(){return JSON.parse(localStorage.getItem('kpi_pins')||JSON.stringify(DEFAULT_PINS));}
+function getUrl(){return localStorage.getItem('kpi_script_url')||'';}
+
+// Build login dropdown — add ADMIN option at top
+const ldEl=document.getElementById('loginDept');
+ldEl.innerHTML='<option value="">-- เลือกแผนก / บทบาท --</option><option value="ADMIN">👑 ผู้ดูแลระบบ (Admin)</option>';
+Object.entries(DEPTS).forEach(([c,d])=>{ldEl.innerHTML+=`<option value="${c}">${d.name} (${c})</option>`;});
+
+// ============================================================
+// URL BANNER
+// ============================================================
+function saveUrl(){
+  const u=document.getElementById('sUrlIn').value.trim();
+  if(!u){alert('กรุณากรอก URL');return;}
+  localStorage.setItem('kpi_script_url',u);
+  refreshBanner();
+}
+function refreshBanner(){
+  const u=getUrl(),b=document.getElementById('sBanner'),s=document.getElementById('uStat'),ti=document.getElementById('sBannerTitle'),inp=document.getElementById('sUrlIn');
+  if(u){b.classList.add('ok');ti.textContent='✅ เชื่อมต่อ Google Sheet แล้ว:';inp.value=u;s.textContent='พร้อมส่งข้อมูล';s.className='ustat ok';}
+  else{b.classList.remove('ok');ti.textContent='⚠️ ยังไม่ได้ตั้งค่า Google Sheet URL:';s.textContent='ยังไม่ได้ตั้งค่า';s.className='ustat warn';}
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+let curDept=null,isAdmin=false;
+
+function doLogin(){
+  const dept=document.getElementById('loginDept').value;
+  const pin=document.getElementById('loginPin').value.trim();
+  const err=document.getElementById('loginErr');
+  if(!dept){err.textContent='กรุณาเลือกแผนก';err.classList.add('show');return;}
+
+  // Admin via department selector + admin pin
+  if(dept==='ADMIN'&&pin===ADMIN_PIN){
+    loginSuccess('ADMIN');return;
+  }
+  // Any dept + admin pin → open pin manager
+  if(dept!=='ADMIN'&&pin===ADMIN_PIN){
+    err.classList.remove('show');openAdmin();return;
+  }
+  // Normal dept login
+  if(dept!=='ADMIN'&&pin===getPins()[dept]){
+    loginSuccess(dept);return;
+  }
+  err.textContent='PIN ไม่ถูกต้อง กรุณาลองใหม่';
+  err.classList.add('show');
+  document.getElementById('loginPin').value='';
+  document.getElementById('loginPin').focus();
+}
+
+function loginSuccess(dept){
+  curDept=dept; isAdmin=(dept==='ADMIN');
+  document.getElementById('loginErr').classList.remove('show');
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  const badge=document.getElementById('activeBadge');
+  if(isAdmin){badge.textContent='👑 ผู้ดูแลระบบ';badge.className='dbadge admin';}
+  else{badge.textContent=DEPTS[dept].name+' ('+dept+')';badge.className='dbadge';}
+  document.getElementById('topMonthYear').style.display=isAdmin?'none':'inline-flex';
+  if(!isAdmin) document.getElementById('monthSel').value=new Date().getMonth()+1;
+  refreshBanner();
+  if(isAdmin) renderAdmin(); else renderForm();
+}
+
+function doLogout(){
+  curDept=null;isAdmin=false;
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='block';
+  document.getElementById('loginPin').value='';
+  document.getElementById('loginDept').value='';
+  document.getElementById('loginErr').classList.remove('show');
+}
+
+// ============================================================
+// DEPT FORM
+// ============================================================
+function stKey(d,m,y){return`kpi_${d}_${y}_${m}`;}
+
+function renderForm(){
+  if(!curDept||isAdmin)return;
+  const d=DEPTS[curDept],m=parseInt(document.getElementById('monthSel').value),y=document.getElementById('yearSel').value;
+  const sv=JSON.parse(localStorage.getItem(stKey(curDept,m,y))||'{}');
+  const rows=d.kpis.map((kpi,i)=>`<tr>
+    <td class="c" style="color:#7f8c8d;width:36px">${i+1}</td>
+    <td>${kpi}</td>
+    <td class="c"><input class="ni" type="number" min="0" id="tot_${i}" value="${sv['tot_'+i]??''}" placeholder="0"></td>
+    <td class="c"><input class="ni" type="number" min="0" id="act_${i}" value="${sv['act_'+i]??''}" placeholder="0"></td>
+    <td class="c"><input class="pi" type="text" id="pct_${i}" value="${sv['pct_'+i]??''}" placeholder="0.00%"></td>
+    <td><input class="ri" type="text" id="rem_${i}" value="${sv['rem_'+i]??''}" placeholder="หมายเหตุ"></td>
+  </tr>`).join('');
+  document.getElementById('mainContent').innerHTML=`
+    <div class="dcard">
+      <div class="dtitle">KPI แผนก${d.name} (${curDept})</div>
+      <div class="dsub">รายงานประจำเดือน ${MONTHS[m]} ปี ${y}</div>
+      <div style="overflow-x:auto"><table class="kpi-tbl">
+        <thead><tr>
+          <th class="c">ลำดับ</th><th>ตัวชี้วัด (KPI)</th>
+          <th class="c" style="width:108px">จำนวนทั้งหมด</th>
+          <th class="c" style="width:122px">จำนวนที่เกิดขึ้นจริง</th>
+          <th class="c" style="width:100px">ร้อยละ</th>
+          <th style="width:155px">หมายเหตุ</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>
+    <div class="abar">
+      <button class="btn btn-p" onclick="saveLocal()">💾 บันทึก</button>
+      <button class="btn btn-g" onclick="sendToSheet()" id="btnSend">📤 ส่งข้อมูลไป Google Sheet</button>
+      <button class="btn btn-e" onclick="exportExcel()">📥 ดาวน์โหลด Excel</button>
+      <button class="btn btn-d" onclick="clearData()">🗑️ ล้างข้อมูลเดือนนี้</button>
+      <span class="sst" id="sst"></span>
+    </div>`;
+}
+
+function collectData(){
+  const data={};
+  DEPTS[curDept].kpis.forEach((_,i)=>{
+    data['tot_'+i]=document.getElementById('tot_'+i)?.value??'';
+    data['act_'+i]=document.getElementById('act_'+i)?.value??'';
+    data['pct_'+i]=document.getElementById('pct_'+i)?.value??'';
+    data['rem_'+i]=document.getElementById('rem_'+i)?.value??'';
+  });return data;
+}
+function saveLocal(){
+  const m=parseInt(document.getElementById('monthSel').value),y=document.getElementById('yearSel').value;
+  localStorage.setItem(stKey(curDept,m,y),JSON.stringify(collectData()));
+  showSt('success','✓ บันทึกในเครื่องสำเร็จ');
+}
+function clearData(){
+  if(!confirm('ต้องการล้างข้อมูลทั้งหมดของเดือนนี้หรือไม่?'))return;
+  localStorage.removeItem(stKey(curDept,parseInt(document.getElementById('monthSel').value),document.getElementById('yearSel').value));
+  renderForm();
+}
+function showSt(type,msg){
+  const el=document.getElementById('sst');if(!el)return;
+  el.textContent=msg;el.className='sst show '+type;
+  if(type!=='loading')setTimeout(()=>el.classList.remove('show'),5000);
+}
+
+async function sendToSheet(){
+  const url=getUrl();
+  if(!url){showSt('error','❌ ยังไม่ได้ตั้งค่า Google Sheet URL');return;}
+  saveLocal();
+  const d=DEPTS[curDept],m=parseInt(document.getElementById('monthSel').value),y=document.getElementById('yearSel').value;
+  const sv=JSON.parse(localStorage.getItem(stKey(curDept,m,y))||'{}');
+  const rows=d.kpis.map((kpi,i)=>({
+    timestamp:new Date().toLocaleString('th-TH'),year:y,month:MONTHS[m],month_num:m,
+    dept_code:curDept,dept_name:d.name,kpi_no:i+1,kpi_name:kpi,
+    total:sv['tot_'+i]||'',actual:sv['act_'+i]||'',percent:sv['pct_'+i]||'',remark:sv['rem_'+i]||''
+  }));
+  const btn=document.getElementById('btnSend');btn.disabled=true;
+  showSt('loading','⏳ กำลังส่งข้อมูล...');
+  try{
+    await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'upsert',rows})});
+    showSt('success',`✅ ส่งข้อมูล ${d.name} เดือน${MONTHS[m]} สำเร็จ!`);
+  }catch(e){showSt('error','❌ ส่งไม่สำเร็จ: '+e.message);}
+  finally{btn.disabled=false;}
+}
+
+function exportExcel(){
+  saveLocal();
+  const d=DEPTS[curDept],m=parseInt(document.getElementById('monthSel').value),y=document.getElementById('yearSel').value;
+  const sv=JSON.parse(localStorage.getItem(stKey(curDept,m,y))||'{}');
+  const rows=[[`KPI แผนก${d.name} (${curDept}) — เดือน${MONTHS[m]} ปี ${y}`],[],
+    ['ลำดับที่','ตัวชี้วัด','จำนวนทั้งหมด','จำนวนที่เกิดขึ้นจริง','ร้อยละ','หมายเหตุ']];
+  d.kpis.forEach((kpi,i)=>rows.push([i+1,kpi,sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',sv['pct_'+i]||'',sv['rem_'+i]||'']));
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:8},{wch:65},{wch:18},{wch:22},{wch:14},{wch:30}];
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}}];
+  XLSX.utils.book_append_sheet(wb,ws,curDept);
+  XLSX.writeFile(wb,`KPI_${curDept}_${MONTHS[m]}_${y}.xlsx`);
+}
+
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+function renderAdmin(){
+  document.getElementById('mainContent').innerHTML=`<div class="adash" id="adashInner"></div>`;
+  buildAdminDash();
+}
+
+function buildAdminDash(){
+  const container=document.getElementById('adashInner');
+  const filterMonth=document.getElementById('admMonth')?.value||new Date().getMonth()+1;
+  const filterYear=document.getElementById('admYear')?.value||'2569';
+  const filterDept=document.getElementById('admDept')?.value||'ALL';
+
+  // Compute stats
+  const deptCodes=Object.keys(DEPTS);
+  let submitted=0,totalKPIs=0,filledKPIs=0;
+  deptCodes.forEach(code=>{
+    const sv=JSON.parse(localStorage.getItem(stKey(code,filterMonth,filterYear))||'{}');
+    const hasAny=DEPTS[code].kpis.some((_,i)=>sv['tot_'+i]||sv['act_'+i]||sv['pct_'+i]);
+    if(hasAny)submitted++;
+    DEPTS[code].kpis.forEach((_,i)=>{
+      totalKPIs++;
+      if(sv['tot_'+i]||sv['act_'+i]||sv['pct_'+i])filledKPIs++;
+    });
+  });
+  const missing=deptCodes.length-submitted;
+
+  container.innerHTML=`
+    <!-- Filter bar -->
+    <div class="fbar">
+      <label>เดือน:</label>
+      <select id="admMonth" onchange="buildAdminDash()">
+        ${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${i+1==filterMonth?'selected':''}>${MONTHS[i+1]}</option>`).join('')}
+      </select>
+      <label>ปี:</label>
+      <select id="admYear" onchange="buildAdminDash()">
+        <option value="2569" ${filterYear=='2569'?'selected':''}>2569</option>
+        <option value="2570" ${filterYear=='2570'?'selected':''}>2570</option>
+      </select>
+      <label>แผนก:</label>
+      <select id="admDept" onchange="buildAdminDash()">
+        <option value="ALL">ทุกแผนก</option>
+        ${deptCodes.map(c=>`<option value="${c}" ${c==filterDept?'selected':''}>${DEPTS[c].name} (${c})</option>`).join('')}
+      </select>
+      <button class="btn-exp-all" onclick="exportAllExcel()">📥 Export เดือนนี้</button>
+      <button class="btn-exp-all" style="background:#1a5276;margin-left:4px" onclick="exportYearlyExcel()">📊 Export รายปี ${filterYear}</button>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-row">
+      <div class="stat-card"><div class="sv">${deptCodes.length}</div><div class="sl">แผนกทั้งหมด</div></div>
+      <div class="stat-card"><div class="sv" style="color:#1e8449">${submitted}</div><div class="sl">ส่งข้อมูลแล้ว</div></div>
+      <div class="stat-card"><div class="sv" style="color:#c0392b">${missing}</div><div class="sl">ยังไม่ส่ง</div></div>
+      <div class="stat-card"><div class="sv">${filledKPIs}/${totalKPIs}</div><div class="sl">KPI ที่กรอกแล้ว</div></div>
+    </div>
+
+    <!-- Dept status grid -->
+    <div class="sum-wrap">
+      <h3>📊 สถานะการส่งข้อมูล — ${MONTHS[filterMonth]} ${filterYear}</h3>
+      <div style="padding:14px 16px">
+        <div class="prog-grid">
+          ${deptCodes.map(code=>{
+            const sv=JSON.parse(localStorage.getItem(stKey(code,filterMonth,filterYear))||'{}');
+            const total=DEPTS[code].kpis.length;
+            const filled=DEPTS[code].kpis.filter((_,i)=>sv['tot_'+i]||sv['act_'+i]||sv['pct_'+i]).length;
+            const cls=filled===0?'':filled<total?'partial':'has-data';
+            return`<div class="prog-card ${cls}">
+              <div class="prog-code">${code}</div>
+              <div class="prog-name">${DEPTS[code].name}</div>
+              <div class="prog-stat ${filled===0?'miss':filled<total?'':'ok'}">
+                ${filled===0?'⭕ ยังไม่กรอก':filled<total?`⚡ ${filled}/${total} KPI`:`✅ ครบ ${total} KPI`}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail table -->
+    <div class="sum-wrap">
+      <h3>📋 รายละเอียด KPI ${filterDept==='ALL'?'ทุกแผนก':'แผนก '+DEPTS[filterDept]?.name} — ${MONTHS[filterMonth]} ${filterYear}</h3>
+      <div class="tscroll">
+        <table class="sum-tbl">
+          <thead><tr>
+            <th>แผนก</th><th>ลำดับ</th><th>ตัวชี้วัด (KPI)</th>
+            <th class="c">จำนวนทั้งหมด</th><th class="c">จำนวนจริง</th>
+            <th class="c">ร้อยละ</th><th>หมายเหตุ</th>
+          </tr></thead>
+          <tbody>
+            ${(filterDept==='ALL'?deptCodes:[filterDept]).flatMap(code=>{
+              const d=DEPTS[code];
+              const sv=JSON.parse(localStorage.getItem(stKey(code,filterMonth,filterYear))||'{}');
+              return d.kpis.map((kpi,i)=>{
+                const tot=sv['tot_'+i]||'',act=sv['act_'+i]||'',pct=sv['pct_'+i]||'',rem=sv['rem_'+i]||'';
+                const empty=!tot&&!act&&!pct;
+                return`<tr>
+                  <td><span class="dept-tag">${code}</span><br><span style="font-size:11px;color:#5d6d7e">${d.name}</span></td>
+                  <td class="c" style="color:#7f8c8d">${i+1}</td>
+                  <td style="font-size:12.5px">${kpi}</td>
+                  <td class="c">${empty?'<span class="no-data">-</span>':tot}</td>
+                  <td class="c">${empty?'<span class="no-data">-</span>':act}</td>
+                  <td class="c">${empty?'<span class="no-data">-</span>':`<span class="pct-val">${pct||'-'}</span>`}</td>
+                  <td style="font-size:12px;color:#5d6d7e">${rem||''}</td>
+                </tr>`;
+              });
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// STYLING HELPERS
+// ============================================================
+const S = {
+  // Fills
+  fNavy:  {patternType:'solid', fgColor:{rgb:'1A5276'}},
+  fBlue:  {patternType:'solid', fgColor:{rgb:'2E86C1'}},
+  fTeal:  {patternType:'solid', fgColor:{rgb:'148F77'}},
+  fGold:  {patternType:'solid', fgColor:{rgb:'D4AC0D'}},
+  fLight: {patternType:'solid', fgColor:{rgb:'D6EAF8'}},
+  fMint:  {patternType:'solid', fgColor:{rgb:'D5F5E3'}},
+  fPeach: {patternType:'solid', fgColor:{rgb:'FDEBD0'}},
+  fGray:  {patternType:'solid', fgColor:{rgb:'F2F3F4'}},
+  fStripe:{patternType:'solid', fgColor:{rgb:'EBF5FB'}},
+  fWhite: {patternType:'solid', fgColor:{rgb:'FFFFFF'}},
+  // Fonts
+  fntWh:  {name:'Arial', sz:11, bold:true,  color:{rgb:'FFFFFF'}},
+  fntWhSm:{name:'Arial', sz:10, bold:true,  color:{rgb:'FFFFFF'}},
+  fntHd:  {name:'Arial', sz:10, bold:true,  color:{rgb:'1A2A3A'}},
+  fntBd:  {name:'Arial', sz:10, bold:true,  color:{rgb:'1A5276'}},
+  fntReg: {name:'Arial', sz:10, bold:false, color:{rgb:'1A2A3A'}},
+  fntNum: {name:'Arial', sz:10, bold:false, color:{rgb:'1A5276'}},
+  fntPct: {name:'Arial', sz:10, bold:true,  color:{rgb:'1E8449'}},
+  fntSub: {name:'Arial', sz:9,  bold:false, color:{rgb:'5D6D7E'}},
+  fntTitle:{name:'Arial',sz:14, bold:true,  color:{rgb:'FFFFFF'}},
+  fntSec: {name:'Arial', sz:11, bold:true,  color:{rgb:'FFFFFF'}},
+  // Alignment
+  alCC:   {horizontal:'center',  vertical:'center',  wrapText:true},
+  alLC:   {horizontal:'left',    vertical:'center',  wrapText:true},
+  alRC:   {horizontal:'right',   vertical:'center'},
+  alCT:   {horizontal:'center',  vertical:'top'},
+  // Border full thin
+  bThin:  {top:{style:'thin',color:{rgb:'B0BEC5'}}, bottom:{style:'thin',color:{rgb:'B0BEC5'}}, left:{style:'thin',color:{rgb:'B0BEC5'}}, right:{style:'thin',color:{rgb:'B0BEC5'}}},
+  bMed:   {top:{style:'medium',color:{rgb:'1A5276'}}, bottom:{style:'medium',color:{rgb:'1A5276'}}, left:{style:'medium',color:{rgb:'1A5276'}}, right:{style:'medium',color:{rgb:'1A5276'}}},
+  bBot:   {bottom:{style:'medium',color:{rgb:'2E86C1'}}},
+};
+
+function cs(fill, font, align, border){
+  const c={};
+  if(fill)  c.fill=fill;
+  if(font)  c.font=font;
+  if(align) c.alignment=align;
+  if(border)c.border=border;
+  return c;
+}
+
+function styleRange(ws, r1, c1, r2, c2, style){
+  for(let r=r1;r<=r2;r++) for(let c=c1;c<=c2;c++){
+    const addr=XLSX.utils.encode_cell({r,c});
+    if(!ws[addr]) ws[addr]={v:'', t:'s'};
+    ws[addr].s = style;
+  }
+}
+
+function setCellStyle(ws, r, c, style){
+  const addr=XLSX.utils.encode_cell({r,c});
+  if(!ws[addr]) ws[addr]={v:'',t:'s'};
+  ws[addr].s = {...(ws[addr].s||{}), ...style};
+}
+
+// ── Apply full styling pass to a sheet ──
+function styleMonthSheet(ws, numKpis, title, month, year){
+  const totalRows = 3 + numKpis; // title row + blank + header + data rows
+
+  // Row 0: big title
+  styleRange(ws, 0,0,0,5, cs(S.fNavy, S.fntTitle, S.alCC, S.bMed));
+  // Row 1: subtitle bar
+  styleRange(ws, 1,0,1,5, cs(S.fBlue, S.fntWhSm, S.alCC));
+  // Row 2: column headers
+  const hdrStyles = [
+    cs(S.fTeal, S.fntWh, S.alCC, S.bThin),
+    cs(S.fBlue, S.fntWh, S.alLC, S.bThin),
+    cs(S.fBlue, S.fntWh, S.alCC, S.bThin),
+    cs(S.fBlue, S.fntWh, S.alCC, S.bThin),
+    cs(S.fGold, S.fntWh, S.alCC, S.bThin),
+    cs(S.fTeal, S.fntWh, S.alLC, S.bThin),
+  ];
+  for(let c=0;c<6;c++) setCellStyle(ws, 2, c, hdrStyles[c]);
+
+  // Data rows
+  for(let i=0;i<numKpis;i++){
+    const r=3+i;
+    const even = i%2===0;
+    const rowFill = even ? S.fGray : S.fWhite;
+    for(let c=0;c<6;c++){
+      let st;
+      if(c===0) st = cs(rowFill, cs(S.fTeal,S.fntWh,S.alCC).font ? S.fntBd : S.fntBd, {horizontal:'center',vertical:'center'}, S.bThin);
+      else if(c===1) st = cs(rowFill, S.fntReg, S.alLC, S.bThin);
+      else if(c===2||c===3) st = cs(rowFill, S.fntNum, S.alCC, S.bThin);
+      else if(c===4) st = cs(even?S.fMint:S.fWhite, S.fntPct, S.alCC, S.bThin);
+      else st = cs(rowFill, S.fntSub, S.alLC, S.bThin);
+      setCellStyle(ws, r, c, st);
+    }
+  }
+  // Set row heights
+  ws['!rows'] = [
+    {hpt:36}, // title
+    {hpt:20}, // subtitle
+    {hpt:28}, // header
+    ...Array(numKpis).fill({hpt:22}),
+  ];
+}
+
+function styleYearlyDeptSheet(ws, numKpis){
+  // Row 0: title, Row 1: blank, Row 2: dept header, Row 3: month group headers, Row 4: sub-headers, data from row 5
+  const MONTH_COLS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const numCols = 2 + 12*3;
+
+  // Title row
+  styleRange(ws, 0,0,0,numCols-1, cs(S.fNavy, S.fntTitle, S.alCC, S.bMed));
+  // Blank row 1 — use as subtitle
+  styleRange(ws, 1,0,1,numCols-1, cs(S.fBlue, S.fntWhSm, S.alCC));
+
+  // Row 2: Month group headers (merged 3 cols each)
+  styleRange(ws, 2,0,2,1, cs(S.fTeal, S.fntWh, S.alCC, S.bThin));
+  for(let m=0;m<12;m++){
+    const c0=2+m*3;
+    const even=m%2===0;
+    const fill=even?S.fNavy:S.fBlue;
+    styleRange(ws, 2,c0,2,c0+2, cs(fill, S.fntWh, S.alCC, S.bThin));
+  }
+
+  // Row 3: sub-headers (ทั้งหมด / จริง / %)
+  styleRange(ws, 3,0,3,0, cs(S.fTeal, S.fntWh, S.alCC, S.bThin));
+  styleRange(ws, 3,1,3,1, cs(S.fBlue, S.fntWh, S.alLC, S.bThin));
+  for(let m=0;m<12;m++){
+    const c0=2+m*3;
+    const even=m%2===0;
+    styleRange(ws, 3,c0,  3,c0,   cs(even?S.fLight:cs(S.fBlue).fill, S.fntHd, S.alCC, S.bThin));
+    styleRange(ws, 3,c0+1,3,c0+1, cs(even?S.fMint:S.fStripe,        S.fntHd, S.alCC, S.bThin));
+    styleRange(ws, 3,c0+2,3,c0+2, cs(even?S.fPeach:S.fGray,         S.fntHd, S.alCC, S.bThin));
+  }
+
+  // Data rows
+  for(let i=0;i<numKpis;i++){
+    const r=4+i;
+    const even=i%2===0;
+    const rowFill=even?S.fGray:S.fWhite;
+    setCellStyle(ws,r,0, cs(rowFill,S.fntBd,{horizontal:'center',vertical:'center'},S.bThin));
+    setCellStyle(ws,r,1, cs(rowFill,S.fntReg,S.alLC,S.bThin));
+    for(let m=0;m<12;m++){
+      const c0=2+m*3;
+      setCellStyle(ws,r,c0,   cs(rowFill,S.fntNum,S.alCC,S.bThin));
+      setCellStyle(ws,r,c0+1, cs(rowFill,S.fntNum,S.alCC,S.bThin));
+      setCellStyle(ws,r,c0+2, cs(even?S.fMint:S.fWhite,S.fntPct,S.alCC,S.bThin));
+    }
+  }
+  ws['!rows']=[{hpt:36},{hpt:18},{hpt:26},{hpt:22},...Array(numKpis).fill({hpt:22})];
+}
+
+// ============================================================
+// EXPORT MONTHLY EXCEL (สวยงาม)
+// ============================================================
+function exportAllExcel(){
+  const m=parseInt(document.getElementById('admMonth')?.value||new Date().getMonth()+1);
+  const y=document.getElementById('admYear')?.value||'2569';
+  const filterDept=document.getElementById('admDept')?.value||'ALL';
+  const codes=filterDept==='ALL'?Object.keys(DEPTS):[filterDept];
+  const wb=XLSX.utils.book_new();
+
+  // ── Sheet สรุปรวม ──
+  const sumData=[
+    [`รายงานสรุป KPI ทุกแผนก — เดือน${MONTHS[m]} ปี ${y}`],
+    [`จัดทำโดยระบบ KPI ประจำปี ${y} | พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
+    ['รหัสแผนก','ชื่อแผนก','ลำดับ','ตัวชี้วัด (KPI)','จำนวนทั้งหมด','จำนวนที่เกิดขึ้นจริง','ร้อยละ','หมายเหตุ']
+  ];
+  codes.forEach(code=>{
+    const d=DEPTS[code], sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+    d.kpis.forEach((kpi,i)=>sumData.push([code,d.name,i+1,kpi,
+      sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',
+      sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',
+      sv['pct_'+i]||'',sv['rem_'+i]||'']));
+  });
+
+  const wsSum=XLSX.utils.aoa_to_sheet(sumData);
+  wsSum['!cols']=[{wch:11},{wch:20},{wch:7},{wch:60},{wch:16},{wch:18},{wch:12},{wch:28}];
+  wsSum['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}}];
+
+  // Style title rows
+  styleRange(wsSum,0,0,0,7, cs(S.fNavy,S.fntTitle,S.alCC,S.bMed));
+  styleRange(wsSum,1,0,1,7, cs(S.fBlue,S.fntWhSm,S.alCC));
+  // Header row
+  const hCols=[S.fTeal,S.fBlue,S.fTeal,S.fBlue,S.fBlue,S.fBlue,S.fGold,S.fTeal];
+  for(let c=0;c<8;c++) setCellStyle(wsSum,2,c,cs(hCols[c],S.fntWh,S.alCC,S.bThin));
+  // Data rows
+  let globalRow=3;
+  codes.forEach((code,ci)=>{
+    const d=DEPTS[code];
+    const deptFills=[
+      {patternType:'solid',fgColor:{rgb:'EBF5FB'}},
+      {patternType:'solid',fgColor:{rgb:'E8F8F5'}},
+      {patternType:'solid',fgColor:{rgb:'FEF9E7'}},
+      {patternType:'solid',fgColor:{rgb:'F9EBEA'}},
+      {patternType:'solid',fgColor:{rgb:'F4ECF7'}},
+    ];
+    const dFill=deptFills[ci%deptFills.length];
+    d.kpis.forEach((_,i)=>{
+      const even=i%2===0;
+      const rf=even?dFill:S.fWhite;
+      setCellStyle(wsSum,globalRow,0,cs(rf,S.fntBd,S.alCC,S.bThin));
+      setCellStyle(wsSum,globalRow,1,cs(rf,S.fntReg,S.alLC,S.bThin));
+      setCellStyle(wsSum,globalRow,2,cs(rf,S.fntBd,S.alCC,S.bThin));
+      setCellStyle(wsSum,globalRow,3,cs(rf,S.fntReg,S.alLC,S.bThin));
+      setCellStyle(wsSum,globalRow,4,cs(rf,S.fntNum,S.alCC,S.bThin));
+      setCellStyle(wsSum,globalRow,5,cs(rf,S.fntNum,S.alCC,S.bThin));
+      setCellStyle(wsSum,globalRow,6,cs(even?S.fMint:S.fWhite,S.fntPct,S.alCC,S.bThin));
+      setCellStyle(wsSum,globalRow,7,cs(rf,S.fntSub,S.alLC,S.bThin));
+      globalRow++;
+    });
+  });
+  wsSum['!rows']=[{hpt:36},{hpt:18},{hpt:28},...Array(globalRow-3).fill({hpt:22})];
+  XLSX.utils.book_append_sheet(wb,wsSum,'สรุปทุกแผนก');
+
+  // ── Sheet แยกรายแผนก ──
+  codes.forEach(code=>{
+    const d=DEPTS[code], sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+    const rows=[
+      [`KPI แผนก${d.name} (${code}) — เดือน${MONTHS[m]} ปี ${y}`],
+      [`จัดทำโดยระบบ KPI | พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
+      ['ลำดับ','ตัวชี้วัด (KPI)','จำนวนทั้งหมด','จำนวนที่เกิดขึ้นจริง','ร้อยละ','หมายเหตุ']
+    ];
+    d.kpis.forEach((kpi,i)=>rows.push([i+1,kpi,
+      sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',
+      sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',
+      sv['pct_'+i]||'',sv['rem_'+i]||'']));
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:7},{wch:62},{wch:16},{wch:18},{wch:12},{wch:28}];
+    ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
+    styleMonthSheet(ws, d.kpis.length);
+    XLSX.utils.book_append_sheet(wb,ws,code);
+  });
+
+  XLSX.writeFile(wb,`KPI_สรุปทุกแผนก_${MONTHS[m]}_${y}.xlsx`);
+}
+
+// ============================================================
+// EXPORT YEARLY EXCEL (สวยงาม)
+// ============================================================
+function exportYearlyExcel(){
+  const y=document.getElementById('admYear')?.value||'2569';
+  const filterDept=document.getElementById('admDept')?.value||'ALL';
+  const codes=filterDept==='ALL'?Object.keys(DEPTS):[filterDept];
+  const wb=XLSX.utils.book_new();
+  const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  // ── Sheet 1: สรุปรายปีรวม ──
+  const yearTitle=`รายงานสรุป KPI ประจำปี ${y} — ${filterDept==='ALL'?'ทุกแผนก':'แผนก '+DEPTS[filterDept]?.name}`;
+  const colHdrs=['รหัส','ชื่อแผนก','ลำดับ','ตัวชี้วัด (KPI)',
+    ...MN.flatMap(mn=>[`${mn} ทั้งหมด`,`${mn} จริง`,`${mn} %`])];
+  const yearData=[[yearTitle],[`พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],colHdrs];
+  const numCols=colHdrs.length;
+
+  codes.forEach(code=>{
+    const d=DEPTS[code];
+    d.kpis.forEach((kpi,i)=>{
+      const row=[code,d.name,i+1,kpi];
+      for(let m=1;m<=12;m++){
+        const sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+        row.push(sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',
+                 sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',
+                 sv['pct_'+i]||'');
+      }
+      yearData.push(row);
+    });
+  });
+
+  const wsYear=XLSX.utils.aoa_to_sheet(yearData);
+  const totalRows=yearData.length;
+  wsYear['!cols']=[{wch:9},{wch:20},{wch:6},{wch:55},...Array(36).fill({wch:9})];
+  wsYear['!merges']=[{s:{r:0,c:0},e:{r:0,c:numCols-1}},{s:{r:1,c:0},e:{r:1,c:numCols-1}}];
+
+  // Title
+  styleRange(wsYear,0,0,0,numCols-1,cs(S.fNavy,S.fntTitle,S.alCC,S.bMed));
+  styleRange(wsYear,1,0,1,numCols-1,cs(S.fBlue,S.fntWhSm,S.alCC));
+  // Header
+  setCellStyle(wsYear,2,0,cs(S.fTeal,S.fntWh,S.alCC,S.bThin));
+  setCellStyle(wsYear,2,1,cs(S.fTeal,S.fntWh,S.alCC,S.bThin));
+  setCellStyle(wsYear,2,2,cs(S.fTeal,S.fntWh,S.alCC,S.bThin));
+  setCellStyle(wsYear,2,3,cs(S.fBlue,S.fntWh,S.alLC,S.bThin));
+  for(let m=0;m<12;m++){
+    const c0=4+m*3;
+    const fill=m%2===0?S.fNavy:S.fBlue;
+    for(let j=0;j<3;j++) setCellStyle(wsYear,2,c0+j,cs(fill,S.fntWh,S.alCC,S.bThin));
+  }
+  // Data rows
+  let dr=3;
+  codes.forEach((code,ci)=>{
+    const d=DEPTS[code];
+    const deptColor=['1A5276','148F77','6C3483','B7950B','943126'][ci%5];
+    d.kpis.forEach((_,i)=>{
+      const even=i%2===0;
+      const rf=even?S.fGray:S.fWhite;
+      setCellStyle(wsYear,dr,0,cs({patternType:'solid',fgColor:{rgb:deptColor}},{name:'Arial',sz:10,bold:true,color:{rgb:'FFFFFF'}},S.alCC,S.bThin));
+      setCellStyle(wsYear,dr,1,cs(rf,S.fntReg,S.alLC,S.bThin));
+      setCellStyle(wsYear,dr,2,cs(rf,S.fntBd,S.alCC,S.bThin));
+      setCellStyle(wsYear,dr,3,cs(rf,S.fntReg,S.alLC,S.bThin));
+      for(let m=0;m<12;m++){
+        const c0=4+m*3;
+        const mFill=m%2===0?{patternType:'solid',fgColor:{rgb:'EBF5FB'}}:S.fWhite;
+        setCellStyle(wsYear,dr,c0,  cs(even?mFill:S.fWhite,S.fntNum,S.alCC,S.bThin));
+        setCellStyle(wsYear,dr,c0+1,cs(even?mFill:S.fWhite,S.fntNum,S.alCC,S.bThin));
+        setCellStyle(wsYear,dr,c0+2,cs(even?S.fMint:S.fWhite,S.fntPct,S.alCC,S.bThin));
+      }
+      dr++;
+    });
+  });
+  wsYear['!rows']=[{hpt:38},{hpt:18},{hpt:26},...Array(dr-3).fill({hpt:22})];
+  wsYear['!freeze']={xSplit:4,ySplit:3};
+  XLSX.utils.book_append_sheet(wb,wsYear,'สรุปรายปี');
+
+  // ── Sheet แยกรายแผนก รายปี ──
+  codes.forEach(code=>{
+    const d=DEPTS[code];
+    const subHdrs=[i+1,'ตัวชี้วัด (KPI)',...MN.flatMap(mn=>[`${mn} ทั้งหมด`,`${mn} จริง`,`${mn} %`])];
+    const dRows=[
+      [`KPI แผนก${d.name} (${code}) — ประจำปี ${y}`],
+      [`จัดทำโดยระบบ KPI | พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
+      // month group row
+      ['ลำดับ','ตัวชี้วัด (KPI)',...MN.flatMap((mn,mi)=>[mn,'',''])],
+      // sub-header row
+      ['','ตัวชี้วัด',...MN.flatMap(()=>['ทั้งหมด','จริง','%'])]
+    ];
+    d.kpis.forEach((kpi,i)=>{
+      const row=[i+1,kpi];
+      for(let m=1;m<=12;m++){
+        const sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+        row.push(sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',
+                 sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',
+                 sv['pct_'+i]||'');
+      }
+      dRows.push(row);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(dRows);
+    const nc=2+36;
+    ws['!cols']=[{wch:7},{wch:55},...Array(36).fill({wch:9})];
+    // Merges: title, subtitle, month groups
+    const merges=[{s:{r:0,c:0},e:{r:0,c:nc-1}},{s:{r:1,c:0},e:{r:1,c:nc-1}}];
+    for(let m=0;m<12;m++) merges.push({s:{r:2,c:2+m*3},e:{r:2,c:2+m*3+2}});
+    ws['!merges']=merges;
+    styleYearlyDeptSheet(ws,d.kpis.length);
+    ws['!freeze']={xSplit:2,ySplit:4};
+    XLSX.utils.book_append_sheet(wb,ws,code);
+  });
+
+  // ── Sheet สรุป % pivot รายเดือน ──
+  const pivData=[
+    [`ตารางสรุปร้อยละ KPI ประจำปี ${y} — ${filterDept==='ALL'?'ทุกแผนก':'แผนก '+DEPTS[filterDept]?.name}`],
+    [`แสดงค่าร้อยละ KPI ข้อที่ 1 ของแต่ละแผนก | พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
+    ['เดือน',...codes.map(c=>DEPTS[c].name+' ('+c+')')]
+  ];
+  for(let m=1;m<=12;m++){
+    const row=[MONTHS[m]];
+    codes.forEach(code=>{
+      const sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+      row.push(sv['pct_0']||'-');
+    });
+    pivData.push(row);
+  }
+  const wsPiv=XLSX.utils.aoa_to_sheet(pivData);
+  const pc=1+codes.length;
+  wsPiv['!cols']=[{wch:16},...codes.map(()=>({wch:18}))];
+  wsPiv['!merges']=[{s:{r:0,c:0},e:{r:0,c:pc-1}},{s:{r:1,c:0},e:{r:1,c:pc-1}}];
+  // Style pivot
+  styleRange(wsPiv,0,0,0,pc-1,cs(S.fNavy,S.fntTitle,S.alCC,S.bMed));
+  styleRange(wsPiv,1,0,1,pc-1,cs(S.fBlue,S.fntWhSm,S.alCC));
+  setCellStyle(wsPiv,2,0,cs(S.fTeal,S.fntWh,S.alCC,S.bThin));
+  for(let c=1;c<pc;c++) setCellStyle(wsPiv,2,c,cs(c%2===0?S.fNavy:S.fBlue,S.fntWh,S.alCC,S.bThin));
+  for(let m=0;m<12;m++){
+    const r=3+m;
+    const even=m%2===0;
+    setCellStyle(wsPiv,r,0,cs(S.fLight,S.fntBd,S.alCC,S.bThin));
+    for(let c=1;c<pc;c++){
+      const v=wsPiv[XLSX.utils.encode_cell({r,c})]?.v;
+      const hasData=v&&v!=='-'&&v!=='';
+      setCellStyle(wsPiv,r,c,cs(
+        hasData?(even?S.fMint:S.fWhite):(even?S.fGray:S.fWhite),
+        hasData?S.fntPct:S.fntSub, S.alCC, S.bThin));
+    }
+  }
+  wsPiv['!rows']=[{hpt:36},{hpt:18},{hpt:28},...Array(12).fill({hpt:24})];
+  XLSX.utils.book_append_sheet(wb,wsPiv,'Pivot รายเดือน');
+
+  XLSX.writeFile(wb,`KPI_รายปี_${y}_${filterDept==='ALL'?'ทุกแผนก':filterDept}.xlsx`);
+}
+
+// ============================================================
+// ADMIN PIN PANEL
+// ============================================================
+let hc=0;
+document.getElementById('headerArea').addEventListener('click',()=>{if(++hc>=5){hc=0;document.getElementById('afb').style.display='block';}});
+
+function openAdmin(){
+  const pins=getPins();
+  document.getElementById('pinBody').innerHTML=Object.entries(DEPTS).map(([c,d])=>
+    `<tr><td><strong>${c}</strong></td><td>${d.name}</td>
+     <td><input class="pe" type="text" id="pin_${c}" value="${pins[c]||''}" maxlength="4" inputmode="numeric"></td></tr>`
+  ).join('');
+  document.getElementById('ao').classList.add('show');
+}
+function savePins(){
+  const pins={};
+  Object.keys(DEPTS).forEach(c=>{const v=document.getElementById('pin_'+c)?.value.trim();if(v)pins[c]=v;});
+  localStorage.setItem('kpi_pins',JSON.stringify(pins));
+  document.getElementById('ao').classList.remove('show');
+  alert('บันทึก PIN ทั้งหมดเรียบร้อยแล้ว ✓');
+}
+</script>
+</body>
+</html>
