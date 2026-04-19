@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบ KPI ประจำปี 2569</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Sarabun',Arial,sans-serif;background:#f0f4f8;color:#1a2a3a;font-size:15px;}
@@ -549,157 +549,22 @@ function buildAdminDash(){
 }
 
 // ============================================================
-// STYLING HELPERS
+// EXPORT HELPERS
 // ============================================================
-const S = {
-  // Fills
-  fNavy:  {patternType:'solid', fgColor:{rgb:'1A5276'}},
-  fBlue:  {patternType:'solid', fgColor:{rgb:'2E86C1'}},
-  fTeal:  {patternType:'solid', fgColor:{rgb:'148F77'}},
-  fGold:  {patternType:'solid', fgColor:{rgb:'D4AC0D'}},
-  fLight: {patternType:'solid', fgColor:{rgb:'D6EAF8'}},
-  fMint:  {patternType:'solid', fgColor:{rgb:'D5F5E3'}},
-  fPeach: {patternType:'solid', fgColor:{rgb:'FDEBD0'}},
-  fGray:  {patternType:'solid', fgColor:{rgb:'F2F3F4'}},
-  fStripe:{patternType:'solid', fgColor:{rgb:'EBF5FB'}},
-  fWhite: {patternType:'solid', fgColor:{rgb:'FFFFFF'}},
-  // Fonts
-  fntWh:  {name:'Arial', sz:11, bold:true,  color:{rgb:'FFFFFF'}},
-  fntWhSm:{name:'Arial', sz:10, bold:true,  color:{rgb:'FFFFFF'}},
-  fntHd:  {name:'Arial', sz:10, bold:true,  color:{rgb:'1A2A3A'}},
-  fntBd:  {name:'Arial', sz:10, bold:true,  color:{rgb:'1A5276'}},
-  fntReg: {name:'Arial', sz:10, bold:false, color:{rgb:'1A2A3A'}},
-  fntNum: {name:'Arial', sz:10, bold:false, color:{rgb:'1A5276'}},
-  fntPct: {name:'Arial', sz:10, bold:true,  color:{rgb:'1E8449'}},
-  fntSub: {name:'Arial', sz:9,  bold:false, color:{rgb:'5D6D7E'}},
-  fntTitle:{name:'Arial',sz:14, bold:true,  color:{rgb:'FFFFFF'}},
-  fntSec: {name:'Arial', sz:11, bold:true,  color:{rgb:'FFFFFF'}},
-  // Alignment
-  alCC:   {horizontal:'center',  vertical:'center',  wrapText:true},
-  alLC:   {horizontal:'left',    vertical:'center',  wrapText:true},
-  alRC:   {horizontal:'right',   vertical:'center'},
-  alCT:   {horizontal:'center',  vertical:'top'},
-  // Border full thin
-  bThin:  {top:{style:'thin',color:{rgb:'B0BEC5'}}, bottom:{style:'thin',color:{rgb:'B0BEC5'}}, left:{style:'thin',color:{rgb:'B0BEC5'}}, right:{style:'thin',color:{rgb:'B0BEC5'}}},
-  bMed:   {top:{style:'medium',color:{rgb:'1A5276'}}, bottom:{style:'medium',color:{rgb:'1A5276'}}, left:{style:'medium',color:{rgb:'1A5276'}}, right:{style:'medium',color:{rgb:'1A5276'}}},
-  bBot:   {bottom:{style:'medium',color:{rgb:'2E86C1'}}},
-};
-
-function cs(fill, font, align, border){
-  const c={};
-  if(fill)  c.fill=fill;
-  if(font)  c.font=font;
-  if(align) c.alignment=align;
-  if(border)c.border=border;
-  return c;
+function safeWrite(wb, filename){
+  try { XLSX.writeFile(wb, filename); }
+  catch(e){ alert('Export ไม่สำเร็จ: '+e.message); }
 }
 
-function styleRange(ws, r1, c1, r2, c2, style){
-  for(let r=r1;r<=r2;r++) for(let c=c1;c<=c2;c++){
-    const addr=XLSX.utils.encode_cell({r,c});
-    if(!ws[addr]) ws[addr]={v:'', t:'s'};
-    ws[addr].s = style;
-  }
-}
-
-function setCellStyle(ws, r, c, style){
-  const addr=XLSX.utils.encode_cell({r,c});
-  if(!ws[addr]) ws[addr]={v:'',t:'s'};
-  ws[addr].s = {...(ws[addr].s||{}), ...style};
-}
-
-// ── Apply full styling pass to a sheet ──
-function styleMonthSheet(ws, numKpis, title, month, year){
-  const totalRows = 3 + numKpis; // title row + blank + header + data rows
-
-  // Row 0: big title
-  styleRange(ws, 0,0,0,5, cs(S.fNavy, S.fntTitle, S.alCC, S.bMed));
-  // Row 1: subtitle bar
-  styleRange(ws, 1,0,1,5, cs(S.fBlue, S.fntWhSm, S.alCC));
-  // Row 2: column headers
-  const hdrStyles = [
-    cs(S.fTeal, S.fntWh, S.alCC, S.bThin),
-    cs(S.fBlue, S.fntWh, S.alLC, S.bThin),
-    cs(S.fBlue, S.fntWh, S.alCC, S.bThin),
-    cs(S.fBlue, S.fntWh, S.alCC, S.bThin),
-    cs(S.fGold, S.fntWh, S.alCC, S.bThin),
-    cs(S.fTeal, S.fntWh, S.alLC, S.bThin),
-  ];
-  for(let c=0;c<6;c++) setCellStyle(ws, 2, c, hdrStyles[c]);
-
-  // Data rows
-  for(let i=0;i<numKpis;i++){
-    const r=3+i;
-    const even = i%2===0;
-    const rowFill = even ? S.fGray : S.fWhite;
-    for(let c=0;c<6;c++){
-      let st;
-      if(c===0) st = cs(rowFill, cs(S.fTeal,S.fntWh,S.alCC).font ? S.fntBd : S.fntBd, {horizontal:'center',vertical:'center'}, S.bThin);
-      else if(c===1) st = cs(rowFill, S.fntReg, S.alLC, S.bThin);
-      else if(c===2||c===3) st = cs(rowFill, S.fntNum, S.alCC, S.bThin);
-      else if(c===4) st = cs(even?S.fMint:S.fWhite, S.fntPct, S.alCC, S.bThin);
-      else st = cs(rowFill, S.fntSub, S.alLC, S.bThin);
-      setCellStyle(ws, r, c, st);
-    }
-  }
-  // Set row heights
-  ws['!rows'] = [
-    {hpt:36}, // title
-    {hpt:20}, // subtitle
-    {hpt:28}, // header
-    ...Array(numKpis).fill({hpt:22}),
-  ];
-}
-
-function styleYearlyDeptSheet(ws, numKpis){
-  // Row 0: title, Row 1: blank, Row 2: dept header, Row 3: month group headers, Row 4: sub-headers, data from row 5
-  const MONTH_COLS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const numCols = 2 + 12*3;
-
-  // Title row
-  styleRange(ws, 0,0,0,numCols-1, cs(S.fNavy, S.fntTitle, S.alCC, S.bMed));
-  // Blank row 1 — use as subtitle
-  styleRange(ws, 1,0,1,numCols-1, cs(S.fBlue, S.fntWhSm, S.alCC));
-
-  // Row 2: Month group headers (merged 3 cols each)
-  styleRange(ws, 2,0,2,1, cs(S.fTeal, S.fntWh, S.alCC, S.bThin));
-  for(let m=0;m<12;m++){
-    const c0=2+m*3;
-    const even=m%2===0;
-    const fill=even?S.fNavy:S.fBlue;
-    styleRange(ws, 2,c0,2,c0+2, cs(fill, S.fntWh, S.alCC, S.bThin));
-  }
-
-  // Row 3: sub-headers (ทั้งหมด / จริง / %)
-  styleRange(ws, 3,0,3,0, cs(S.fTeal, S.fntWh, S.alCC, S.bThin));
-  styleRange(ws, 3,1,3,1, cs(S.fBlue, S.fntWh, S.alLC, S.bThin));
-  for(let m=0;m<12;m++){
-    const c0=2+m*3;
-    const even=m%2===0;
-    styleRange(ws, 3,c0,  3,c0,   cs(even?S.fLight:cs(S.fBlue).fill, S.fntHd, S.alCC, S.bThin));
-    styleRange(ws, 3,c0+1,3,c0+1, cs(even?S.fMint:S.fStripe,        S.fntHd, S.alCC, S.bThin));
-    styleRange(ws, 3,c0+2,3,c0+2, cs(even?S.fPeach:S.fGray,         S.fntHd, S.alCC, S.bThin));
-  }
-
-  // Data rows
-  for(let i=0;i<numKpis;i++){
-    const r=4+i;
-    const even=i%2===0;
-    const rowFill=even?S.fGray:S.fWhite;
-    setCellStyle(ws,r,0, cs(rowFill,S.fntBd,{horizontal:'center',vertical:'center'},S.bThin));
-    setCellStyle(ws,r,1, cs(rowFill,S.fntReg,S.alLC,S.bThin));
-    for(let m=0;m<12;m++){
-      const c0=2+m*3;
-      setCellStyle(ws,r,c0,   cs(rowFill,S.fntNum,S.alCC,S.bThin));
-      setCellStyle(ws,r,c0+1, cs(rowFill,S.fntNum,S.alCC,S.bThin));
-      setCellStyle(ws,r,c0+2, cs(even?S.fMint:S.fWhite,S.fntPct,S.alCC,S.bThin));
-    }
-  }
-  ws['!rows']=[{hpt:36},{hpt:18},{hpt:26},{hpt:22},...Array(numKpis).fill({hpt:22})];
+function addStyledSheet(wb, sheetName, aoa, colWidths, merges){
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  if(colWidths) ws['!cols'] = colWidths;
+  if(merges)    ws['!merges'] = merges;
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
 }
 
 // ============================================================
-// EXPORT MONTHLY EXCEL (สวยงาม)
+// EXPORT MONTHLY EXCEL
 // ============================================================
 function exportAllExcel(){
   const m=parseInt(document.getElementById('admMonth')?.value||new Date().getMonth()+1);
@@ -708,62 +573,26 @@ function exportAllExcel(){
   const codes=filterDept==='ALL'?Object.keys(DEPTS):[filterDept];
   const wb=XLSX.utils.book_new();
 
-  // ── Sheet สรุปรวม ──
-  const sumData=[
+  // Sheet สรุปรวม
+  const sumRows=[
     [`รายงานสรุป KPI ทุกแผนก — เดือน${MONTHS[m]} ปี ${y}`],
     [`จัดทำโดยระบบ KPI ประจำปี ${y} | พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
     ['รหัสแผนก','ชื่อแผนก','ลำดับ','ตัวชี้วัด (KPI)','จำนวนทั้งหมด','จำนวนที่เกิดขึ้นจริง','ร้อยละ','หมายเหตุ']
   ];
   codes.forEach(code=>{
-    const d=DEPTS[code], sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
-    d.kpis.forEach((kpi,i)=>sumData.push([code,d.name,i+1,kpi,
+    const d=DEPTS[code],sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+    d.kpis.forEach((kpi,i)=>sumRows.push([code,d.name,i+1,kpi,
       sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',
       sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',
       sv['pct_'+i]||'',sv['rem_'+i]||'']));
   });
+  addStyledSheet(wb,'สรุปทุกแผนก',sumRows,
+    [{wch:11},{wch:20},{wch:7},{wch:60},{wch:16},{wch:18},{wch:12},{wch:28}],
+    [{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}}]);
 
-  const wsSum=XLSX.utils.aoa_to_sheet(sumData);
-  wsSum['!cols']=[{wch:11},{wch:20},{wch:7},{wch:60},{wch:16},{wch:18},{wch:12},{wch:28}];
-  wsSum['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}}];
-
-  // Style title rows
-  styleRange(wsSum,0,0,0,7, cs(S.fNavy,S.fntTitle,S.alCC,S.bMed));
-  styleRange(wsSum,1,0,1,7, cs(S.fBlue,S.fntWhSm,S.alCC));
-  // Header row
-  const hCols=[S.fTeal,S.fBlue,S.fTeal,S.fBlue,S.fBlue,S.fBlue,S.fGold,S.fTeal];
-  for(let c=0;c<8;c++) setCellStyle(wsSum,2,c,cs(hCols[c],S.fntWh,S.alCC,S.bThin));
-  // Data rows
-  let globalRow=3;
-  codes.forEach((code,ci)=>{
-    const d=DEPTS[code];
-    const deptFills=[
-      {patternType:'solid',fgColor:{rgb:'EBF5FB'}},
-      {patternType:'solid',fgColor:{rgb:'E8F8F5'}},
-      {patternType:'solid',fgColor:{rgb:'FEF9E7'}},
-      {patternType:'solid',fgColor:{rgb:'F9EBEA'}},
-      {patternType:'solid',fgColor:{rgb:'F4ECF7'}},
-    ];
-    const dFill=deptFills[ci%deptFills.length];
-    d.kpis.forEach((_,i)=>{
-      const even=i%2===0;
-      const rf=even?dFill:S.fWhite;
-      setCellStyle(wsSum,globalRow,0,cs(rf,S.fntBd,S.alCC,S.bThin));
-      setCellStyle(wsSum,globalRow,1,cs(rf,S.fntReg,S.alLC,S.bThin));
-      setCellStyle(wsSum,globalRow,2,cs(rf,S.fntBd,S.alCC,S.bThin));
-      setCellStyle(wsSum,globalRow,3,cs(rf,S.fntReg,S.alLC,S.bThin));
-      setCellStyle(wsSum,globalRow,4,cs(rf,S.fntNum,S.alCC,S.bThin));
-      setCellStyle(wsSum,globalRow,5,cs(rf,S.fntNum,S.alCC,S.bThin));
-      setCellStyle(wsSum,globalRow,6,cs(even?S.fMint:S.fWhite,S.fntPct,S.alCC,S.bThin));
-      setCellStyle(wsSum,globalRow,7,cs(rf,S.fntSub,S.alLC,S.bThin));
-      globalRow++;
-    });
-  });
-  wsSum['!rows']=[{hpt:36},{hpt:18},{hpt:28},...Array(globalRow-3).fill({hpt:22})];
-  XLSX.utils.book_append_sheet(wb,wsSum,'สรุปทุกแผนก');
-
-  // ── Sheet แยกรายแผนก ──
+  // Sheet แยกรายแผนก
   codes.forEach(code=>{
-    const d=DEPTS[code], sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+    const d=DEPTS[code],sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
     const rows=[
       [`KPI แผนก${d.name} (${code}) — เดือน${MONTHS[m]} ปี ${y}`],
       [`จัดทำโดยระบบ KPI | พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
@@ -773,18 +602,16 @@ function exportAllExcel(){
       sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',
       sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',
       sv['pct_'+i]||'',sv['rem_'+i]||'']));
-    const ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:7},{wch:62},{wch:16},{wch:18},{wch:12},{wch:28}];
-    ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
-    styleMonthSheet(ws, d.kpis.length);
-    XLSX.utils.book_append_sheet(wb,ws,code);
+    addStyledSheet(wb,code,rows,
+      [{wch:7},{wch:62},{wch:16},{wch:18},{wch:12},{wch:28}],
+      [{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}]);
   });
 
-  XLSX.writeFile(wb,`KPI_สรุปทุกแผนก_${MONTHS[m]}_${y}.xlsx`);
+  safeWrite(wb,`KPI_สรุปทุกแผนก_${MONTHS[m]}_${y}.xlsx`);
 }
 
 // ============================================================
-// EXPORT YEARLY EXCEL (สวยงาม)
+// EXPORT YEARLY EXCEL
 // ============================================================
 function exportYearlyExcel(){
   const y=document.getElementById('admYear')?.value||'2569';
@@ -794,18 +621,19 @@ function exportYearlyExcel(){
   const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
   // ── Sheet 1: สรุปรายปีรวม ──
-  const yearTitle=`รายงานสรุป KPI ประจำปี ${y} — ${filterDept==='ALL'?'ทุกแผนก':'แผนก '+DEPTS[filterDept]?.name}`;
   const colHdrs=['รหัส','ชื่อแผนก','ลำดับ','ตัวชี้วัด (KPI)',
-    ...MN.flatMap(mn=>[`${mn} ทั้งหมด`,`${mn} จริง`,`${mn} %`])];
-  const yearData=[[yearTitle],[`พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],colHdrs];
-  const numCols=colHdrs.length;
-
+    ...MN.flatMap(mn=>[mn+' ทั้งหมด', mn+' จริง', mn+' %'])];
+  const yearData=[
+    [`รายงานสรุป KPI ประจำปี ${y} — ${filterDept==='ALL'?'ทุกแผนก':'แผนก '+DEPTS[filterDept]?.name}`],
+    [`พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
+    colHdrs
+  ];
   codes.forEach(code=>{
     const d=DEPTS[code];
     d.kpis.forEach((kpi,i)=>{
       const row=[code,d.name,i+1,kpi];
-      for(let m=1;m<=12;m++){
-        const sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+      for(let mm=1;mm<=12;mm++){
+        const sv=JSON.parse(localStorage.getItem(stKey(code,mm,y))||'{}');
         row.push(sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',
                  sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',
                  sv['pct_'+i]||'');
@@ -813,125 +641,60 @@ function exportYearlyExcel(){
       yearData.push(row);
     });
   });
-
-  const wsYear=XLSX.utils.aoa_to_sheet(yearData);
-  const totalRows=yearData.length;
-  wsYear['!cols']=[{wch:9},{wch:20},{wch:6},{wch:55},...Array(36).fill({wch:9})];
-  wsYear['!merges']=[{s:{r:0,c:0},e:{r:0,c:numCols-1}},{s:{r:1,c:0},e:{r:1,c:numCols-1}}];
-
-  // Title
-  styleRange(wsYear,0,0,0,numCols-1,cs(S.fNavy,S.fntTitle,S.alCC,S.bMed));
-  styleRange(wsYear,1,0,1,numCols-1,cs(S.fBlue,S.fntWhSm,S.alCC));
-  // Header
-  setCellStyle(wsYear,2,0,cs(S.fTeal,S.fntWh,S.alCC,S.bThin));
-  setCellStyle(wsYear,2,1,cs(S.fTeal,S.fntWh,S.alCC,S.bThin));
-  setCellStyle(wsYear,2,2,cs(S.fTeal,S.fntWh,S.alCC,S.bThin));
-  setCellStyle(wsYear,2,3,cs(S.fBlue,S.fntWh,S.alLC,S.bThin));
-  for(let m=0;m<12;m++){
-    const c0=4+m*3;
-    const fill=m%2===0?S.fNavy:S.fBlue;
-    for(let j=0;j<3;j++) setCellStyle(wsYear,2,c0+j,cs(fill,S.fntWh,S.alCC,S.bThin));
-  }
-  // Data rows
-  let dr=3;
-  codes.forEach((code,ci)=>{
-    const d=DEPTS[code];
-    const deptColor=['1A5276','148F77','6C3483','B7950B','943126'][ci%5];
-    d.kpis.forEach((_,i)=>{
-      const even=i%2===0;
-      const rf=even?S.fGray:S.fWhite;
-      setCellStyle(wsYear,dr,0,cs({patternType:'solid',fgColor:{rgb:deptColor}},{name:'Arial',sz:10,bold:true,color:{rgb:'FFFFFF'}},S.alCC,S.bThin));
-      setCellStyle(wsYear,dr,1,cs(rf,S.fntReg,S.alLC,S.bThin));
-      setCellStyle(wsYear,dr,2,cs(rf,S.fntBd,S.alCC,S.bThin));
-      setCellStyle(wsYear,dr,3,cs(rf,S.fntReg,S.alLC,S.bThin));
-      for(let m=0;m<12;m++){
-        const c0=4+m*3;
-        const mFill=m%2===0?{patternType:'solid',fgColor:{rgb:'EBF5FB'}}:S.fWhite;
-        setCellStyle(wsYear,dr,c0,  cs(even?mFill:S.fWhite,S.fntNum,S.alCC,S.bThin));
-        setCellStyle(wsYear,dr,c0+1,cs(even?mFill:S.fWhite,S.fntNum,S.alCC,S.bThin));
-        setCellStyle(wsYear,dr,c0+2,cs(even?S.fMint:S.fWhite,S.fntPct,S.alCC,S.bThin));
-      }
-      dr++;
-    });
-  });
-  wsYear['!rows']=[{hpt:38},{hpt:18},{hpt:26},...Array(dr-3).fill({hpt:22})];
-  wsYear['!freeze']={xSplit:4,ySplit:3};
-  XLSX.utils.book_append_sheet(wb,wsYear,'สรุปรายปี');
+  const nc=colHdrs.length;
+  addStyledSheet(wb,'สรุปรายปี',yearData,
+    [{wch:9},{wch:20},{wch:6},{wch:55},...Array(36).fill({wch:9})],
+    [{s:{r:0,c:0},e:{r:0,c:nc-1}},{s:{r:1,c:0},e:{r:1,c:nc-1}}]);
 
   // ── Sheet แยกรายแผนก รายปี ──
   codes.forEach(code=>{
     const d=DEPTS[code];
-    const subHdrs=[i+1,'ตัวชี้วัด (KPI)',...MN.flatMap(mn=>[`${mn} ทั้งหมด`,`${mn} จริง`,`${mn} %`])];
+    const mGrp=['ลำดับ','ตัวชี้วัด (KPI)',...MN.flatMap(mn=>[mn,'',''])];
+    const subH=['','ตัวชี้วัด',...MN.flatMap(()=>['ทั้งหมด','จริง','%'])];
     const dRows=[
       [`KPI แผนก${d.name} (${code}) — ประจำปี ${y}`],
       [`จัดทำโดยระบบ KPI | พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
-      // month group row
-      ['ลำดับ','ตัวชี้วัด (KPI)',...MN.flatMap((mn,mi)=>[mn,'',''])],
-      // sub-header row
-      ['','ตัวชี้วัด',...MN.flatMap(()=>['ทั้งหมด','จริง','%'])]
+      mGrp, subH
     ];
     d.kpis.forEach((kpi,i)=>{
       const row=[i+1,kpi];
-      for(let m=1;m<=12;m++){
-        const sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+      for(let mm=1;mm<=12;mm++){
+        const sv=JSON.parse(localStorage.getItem(stKey(code,mm,y))||'{}');
         row.push(sv['tot_'+i]!==''?(parseFloat(sv['tot_'+i])||''):'',
                  sv['act_'+i]!==''?(parseFloat(sv['act_'+i])||''):'',
                  sv['pct_'+i]||'');
       }
       dRows.push(row);
     });
-    const ws=XLSX.utils.aoa_to_sheet(dRows);
-    const nc=2+36;
-    ws['!cols']=[{wch:7},{wch:55},...Array(36).fill({wch:9})];
-    // Merges: title, subtitle, month groups
-    const merges=[{s:{r:0,c:0},e:{r:0,c:nc-1}},{s:{r:1,c:0},e:{r:1,c:nc-1}}];
-    for(let m=0;m<12;m++) merges.push({s:{r:2,c:2+m*3},e:{r:2,c:2+m*3+2}});
-    ws['!merges']=merges;
-    styleYearlyDeptSheet(ws,d.kpis.length);
-    ws['!freeze']={xSplit:2,ySplit:4};
-    XLSX.utils.book_append_sheet(wb,ws,code);
+    const merges=[{s:{r:0,c:0},e:{r:0,c:37}},{s:{r:1,c:0},e:{r:1,c:37}}];
+    for(let mm=0;mm<12;mm++) merges.push({s:{r:2,c:2+mm*3},e:{r:2,c:2+mm*3+2}});
+    addStyledSheet(wb,code,dRows,
+      [{wch:7},{wch:55},...Array(36).fill({wch:9})], merges);
   });
 
-  // ── Sheet สรุป % pivot รายเดือน ──
+  // ── Sheet Pivot รายเดือน ──
   const pivData=[
-    [`ตารางสรุปร้อยละ KPI ประจำปี ${y} — ${filterDept==='ALL'?'ทุกแผนก':'แผนก '+DEPTS[filterDept]?.name}`],
-    [`แสดงค่าร้อยละ KPI ข้อที่ 1 ของแต่ละแผนก | พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
+    [`ตารางสรุปร้อยละ KPI ประจำปี ${y}`],
+    [`พิมพ์วันที่ ${new Date().toLocaleDateString('th-TH')}`],
     ['เดือน',...codes.map(c=>DEPTS[c].name+' ('+c+')')]
   ];
-  for(let m=1;m<=12;m++){
-    const row=[MONTHS[m]];
+  for(let mm=1;mm<=12;mm++){
+    const row=[MONTHS[mm]];
     codes.forEach(code=>{
-      const sv=JSON.parse(localStorage.getItem(stKey(code,m,y))||'{}');
+      const sv=JSON.parse(localStorage.getItem(stKey(code,mm,y))||'{}');
       row.push(sv['pct_0']||'-');
     });
     pivData.push(row);
   }
-  const wsPiv=XLSX.utils.aoa_to_sheet(pivData);
   const pc=1+codes.length;
-  wsPiv['!cols']=[{wch:16},...codes.map(()=>({wch:18}))];
-  wsPiv['!merges']=[{s:{r:0,c:0},e:{r:0,c:pc-1}},{s:{r:1,c:0},e:{r:1,c:pc-1}}];
-  // Style pivot
-  styleRange(wsPiv,0,0,0,pc-1,cs(S.fNavy,S.fntTitle,S.alCC,S.bMed));
-  styleRange(wsPiv,1,0,1,pc-1,cs(S.fBlue,S.fntWhSm,S.alCC));
-  setCellStyle(wsPiv,2,0,cs(S.fTeal,S.fntWh,S.alCC,S.bThin));
-  for(let c=1;c<pc;c++) setCellStyle(wsPiv,2,c,cs(c%2===0?S.fNavy:S.fBlue,S.fntWh,S.alCC,S.bThin));
-  for(let m=0;m<12;m++){
-    const r=3+m;
-    const even=m%2===0;
-    setCellStyle(wsPiv,r,0,cs(S.fLight,S.fntBd,S.alCC,S.bThin));
-    for(let c=1;c<pc;c++){
-      const v=wsPiv[XLSX.utils.encode_cell({r,c})]?.v;
-      const hasData=v&&v!=='-'&&v!=='';
-      setCellStyle(wsPiv,r,c,cs(
-        hasData?(even?S.fMint:S.fWhite):(even?S.fGray:S.fWhite),
-        hasData?S.fntPct:S.fntSub, S.alCC, S.bThin));
-    }
-  }
-  wsPiv['!rows']=[{hpt:36},{hpt:18},{hpt:28},...Array(12).fill({hpt:24})];
-  XLSX.utils.book_append_sheet(wb,wsPiv,'Pivot รายเดือน');
+  addStyledSheet(wb,'Pivot รายเดือน',pivData,
+    [{wch:14},...codes.map(()=>({wch:18}))],
+    [{s:{r:0,c:0},e:{r:0,c:pc-1}},{s:{r:1,c:0},e:{r:1,c:pc-1}}]);
 
-  XLSX.writeFile(wb,`KPI_รายปี_${y}_${filterDept==='ALL'?'ทุกแผนก':filterDept}.xlsx`);
+  safeWrite(wb,`KPI_รายปี_${y}_${filterDept==='ALL'?'ทุกแผนก':filterDept}.xlsx`);
 }
+
+
 
 // ============================================================
 // ADMIN PIN PANEL
